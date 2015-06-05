@@ -7,6 +7,6 @@ Getting started:
 
     $ git clone https://github.com/droidream/dukv8.git
     $ cd dukv8
-    $ mkdir build
+    $ mkdir out
     $ cmake ..
     $ make -j32
