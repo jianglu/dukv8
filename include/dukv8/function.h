@@ -51,11 +51,9 @@ public:
     V8EXPORT static const int kLineOffsetNotFound;
 
 public:
-    V8EXPORT Function(DukContextRef duk_ctx, void *heap_ptr);
-    virtual ~Function();
+    Function *Init(DukContextRef duk_ctx, void *heap_ptr);
 
 private:
-    V8EXPORT Function();
     V8EXPORT static void CheckCast(Value *obj);
 
 private:

@@ -63,11 +63,6 @@ class Object : public Value, public HeapObject {
 public:
     RTTI_DECLARE();
 
-    Object(duk_context *duk_ctx);
-    Object(duk_context *duk_ctx, void *heap_ptr);
-
-    virtual ~Object();
-
     V8EXPORT bool Set(Handle<Value> key,
                       Handle<Value> value,
                       PropertyAttribute attrib = None);
@@ -153,6 +148,22 @@ public:
     virtual void Push() const;
 
     void AttachDuktapeObject(void *heap_ptr);
+
+    static Object *Create(DukContextRef duk_ctx, void *heap_ptr = NULL) {
+        Object *object = new Object;
+        if (heap_ptr) {
+            return object->Init(duk_ctx, heap_ptr);
+        } else {
+            return object->Init(duk_ctx);
+        }
+    }
+
+protected:
+    Object *Init(DukContextRef duk_ctx);
+    Object *Init(DukContextRef duk_ctx, void *heap_ptr);
+    virtual void Deinit();
+
+    friend class Context;
 };
 
 }

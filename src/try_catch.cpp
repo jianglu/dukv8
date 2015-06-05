@@ -5,6 +5,7 @@
 #include "dukv8/try_catch.h"
 #include "dukv8/local.h"
 #include "dukv8/value.h"
+#include "dukv8/message.h"
 
 namespace v8 {
 

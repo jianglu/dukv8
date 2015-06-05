@@ -12,36 +12,52 @@ namespace v8 {
 
 RTTI_IMPLEMENT(v8::String, v8::Primitive);
 
-String::String(duk_context *duk_ctx, const char *data, int length) :
-        Primitive(duk_ctx) {
+String *String::Init(DukContextRef duk_ctx, const char *data, int length) {
+    Primitive::Init(duk_ctx);
+    external_ascii_string_resource_ = NULL;
     DUK_STACK_SCOPE(duk_ctx);
     if (length >= 0) {
-        duk_push_lstring(duk_ctx, data, length);
+        duk_push_lstring(duk_ctx, data, (duk_size_t) length);
     } else {
         duk_push_string(duk_ctx, data);
     }
     duk_obj_heapptr_ = duk_get_heapptr(duk_ctx, -1);
     duk_obj_index_ = DukObjectRetain(duk_obj_heapptr_);
-//    printf("%s\n", __PRETTY_FUNCTION__);
+    return this;
 }
 
-String::String(duk_context *duk_ctx, void *heap_ptr) :
-        Primitive(duk_ctx) {
+String *String::Init(DukContextRef duk_ctx, void *heap_ptr) {
+    Primitive::Init(duk_ctx);
+    external_ascii_string_resource_ = NULL;
     DUK_STACK_SCOPE(duk_ctx);
     duk_push_heapptr(duk_ctx, heap_ptr);
     assert(duk_is_string(duk_ctx, -1));
     duk_obj_heapptr_ = duk_get_heapptr(duk_ctx, -1);
     duk_obj_index_ = DukObjectRetain(duk_obj_heapptr_);
-//    printf("%s\n", __PRETTY_FUNCTION__);
+    return this;
 }
 
-String::~String() {
-    DukObjectRelease(duk_obj_index_);
-//    printf("%s\n", __PRETTY_FUNCTION__);
+String *String::Init(DukContextRef duk_ctx, ExternalAsciiStringResource *external_resource) {
+    Primitive::Init(duk_ctx);
+    external_ascii_string_resource_ = external_resource;
+    return this;
+}
+
+void String::Deinit() {
+    if (duk_obj_index_) {
+        DukObjectRelease(duk_obj_index_);
+    }
+    Primitive::Deinit();
 }
 
 void String::Push() const {
-    duk_push_heapptr(duk_ctx_, duk_obj_heapptr_);
+    if (external_ascii_string_resource_) {
+        duk_push_lstring(duk_ctx_,
+                         external_ascii_string_resource_->data(),
+                         external_ascii_string_resource_->length());
+    } else {
+        duk_push_heapptr(duk_ctx_, duk_obj_heapptr_);
+    }
 }
 
 /**
@@ -74,7 +90,8 @@ bool String::MayContainNonAscii() const {
  */
 Local<String> String::New(const char *data, int length) {
     duk_context *ctx = Isolate::GetCurrent()->GetDukContext();
-    return Local<String>::New(Handle<String>(new String(ctx, data, length)));
+    return Local<String>::New(Handle<String>(
+            (new String)->Init(ctx, data, length)));
 }
 
 /** Allocates a new string from 16-bit character codes.*/
@@ -96,7 +113,7 @@ Local<String> String::Concat(Handle<String> left,
     right->Push();
     duk_concat(ctx, 2);
     void *heap_ptr = duk_get_heapptr(ctx, -1);
-    return Local<String>::New(Handle<String>(new String(ctx, heap_ptr)));
+    return Local<String>::New(Handle<String>((new String)->Init(ctx, heap_ptr)));
 }
 
 // 16-bit character codes.
@@ -123,14 +140,17 @@ int String::WriteUtf8(char *buffer,
     return 0;
 }
 
-Local<String> String::NewExternal(String::ExternalStringResource *resource) {
-    TODO();
-    return Local<String>();
+bool String::IsExternal() const {
+    return false;
+}
+
+bool String::IsExternalAscii() const {
+    return external_ascii_string_resource_ != NULL;
 }
 
 Local<String> String::NewExternal(String::ExternalAsciiStringResource *resource) {
-    TODO();
-    return Local<String>();
+    duk_context *ctx = Isolate::GetCurrent()->GetDukContext();
+    return Local<String>::New(Handle<String>((new String)->Init(ctx, resource)));
 }
 
 /**

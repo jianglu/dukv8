@@ -10,14 +10,17 @@
 #include "script_origin.h"
 #include "script_data.h"
 #include "gcobject.h"
+#include "function_template.h"
 
 namespace v8 {
 
 /**
  * A compiled JavaScript script.
  */
-class V8EXPORT Script : i::GCObject {
+class V8EXPORT Script : public i::GCObject {
 public:
+    RTTI_DECLARE()
+
     /**
      * Compiles the specified script (context-independent).
      *
@@ -116,6 +119,11 @@ protected:
            Handle<Value> file_name,
            Handle<Integer> line_unmber,
            Handle<String> script_data = Handle<String>());
+
+    virtual ~Script();
+
+    virtual Script *Init();
+    virtual void Deinit();
 
     void TryCompile();
 

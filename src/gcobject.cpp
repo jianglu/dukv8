@@ -17,12 +17,15 @@ RTTI_IMPLEMENT_ROOT(v8::internal::GCObject);
 static duk_int_t GCObjectFinalizer(duk_context *ctx) {
     DUK_STACK_SCOPE(ctx);
     duk_get_prop_index(ctx, -1, THIS_INDEX);
-    delete static_cast<GCObject *>(duk_get_pointer(ctx, -1));
+    GCObject *gcobject = static_cast<GCObject *>(duk_get_pointer(ctx, -1));
+    gcobject->Deinit();
+    delete gcobject;
     return DUK_ERR_NONE;
 }
 
 GCObject::GCObject() :
-        gcobject_heap_ptr_(NULL) {
+        gcobject_heap_ptr_(NULL),
+        gcobject_ref_count_(0) {
     Isolate *isolate = Isolate::GetCurrent();
     DukContextRef ctx = isolate->GetDukContext();
 
@@ -36,26 +39,54 @@ GCObject::GCObject() :
 
     gcobject_heap_ptr_ = duk_get_heapptr(ctx, -1);
 
-    isolate->GetAutoReleasePool()->AutoRelease(gcobject_heap_ptr_);
+    // 加入自动释放池, 避免没有任何句柄引用的状态下导致的 duk_pop 时析构
+    isolate->GetAutoReleasePool()->AutoRelease(this);
 
     duk_pop(ctx);
 }
 
 GCObject::~GCObject() {
+//    printf("%s[%p] 析构\n", GetRTTI()->GetName(), this);
 }
 
-void GCObject::AddToObjectPool(GCObjectPool *pool) const {
-    pool->AddObject(gcobject_heap_ptr_);
+GCObject *GCObject::Init() {
+    // printf("%s[%p] 构造\n", GetTypeName(), this);
+    return this;
 }
 
-void GCObject::AddToGlobalStash(v8::internal::GlobalStash *stash) const {
-    const_cast<GCObject *>(this)->gcobject_stash_index_
-            = stash->AddObject(gcobject_heap_ptr_);
+void GCObject::Deinit() {
+    // printf("%s[%p] 析构\n", GetTypeName(), this);
 }
 
-void GCObject::RemoveFromGlobalStash(v8::internal::GlobalStash *stash) const {
-    stash->RemoveObject(gcobject_stash_index_);
-    const_cast<GCObject *>(this)->gcobject_stash_index_ = 0;
+//void GCObject::AddToObjectPool(GCObjectPool *pool) const {
+//    pool->AddObject(gcobject_heap_ptr_);
+//}
+
+//void GCObject::AddToGlobalStash(v8::internal::GlobalStash *stash) const {
+//    const_cast<GCObject *>(this)->gcobject_stash_index_
+//            = stash->AddObject(gcobject_heap_ptr_);
+//}
+//
+//void GCObject::RemoveFromGlobalStash(v8::internal::GlobalStash *stash) const {
+//    stash->RemoveObject(gcobject_stash_index_);
+//    const_cast<GCObject *>(this)->gcobject_stash_index_ = 0;
+//}
+
+void GCObject::Retain() {
+    if (gcobject_ref_count_ == 0) {
+        i::GlobalStash stash("__gcobjects");
+        gcobject_stash_index_ = stash.AddObject(gcobject_heap_ptr_);
+    }
+    gcobject_ref_count_++;
+}
+
+void GCObject::Release() {
+    gcobject_ref_count_--;
+    if (gcobject_ref_count_ == 0) {
+        i::GlobalStash stash("__gcobjects");
+        ASSERT(gcobject_stash_index_ != 0);
+        stash.RemoveObject(gcobject_stash_index_);
+    }
 }
 
 }

@@ -5,9 +5,9 @@
 #ifndef DUKV8_HANDLESCOPE_H
 #define DUKV8_HANDLESCOPE_H
 
+#include <set>
 #include "base.h"
 #include "gcobject.h"
-#include "gcobject_pool.h"
 
 namespace v8 {
 
@@ -47,6 +47,8 @@ public:
 
     ~HandleScope();
 
+    int NumberOfHandles();
+
     /**
      * Closes the handle scope and returns the value as a handle in the
      * previous scope, which is the new current scope after the call.
@@ -64,9 +66,11 @@ private:
 
     void CloseScope();
 
+    void AddObjectToScope(v8::internal::GCObject *gcobject);
+
     static HandleScope *s_current_scope_;
     HandleScope *previous_scope_;
-    i::GCObjectPool *pool_;
+    std::set<i::GCObject *> gcobject_set_;
 };
 
 template<class T>
@@ -74,13 +78,13 @@ Local<T> HandleScope::Close(Handle<T> handle_value) {
     T *value = *handle_value;
     // Throw away all handles in the current scope.
     CloseScope();
+    Local<T> result = Local<T>::New(Handle<T>(
+            (reinterpret_cast<T *>(HandleScope::CreateHandle(
+                    reinterpret_cast<internal::Object *>(value))))));
     OpenScope();
-    Handle<T> result(reinterpret_cast<T *>(HandleScope::CreateHandle(
-            reinterpret_cast<internal::Object *>(value))));
-
     // Reinitialize the current scope (so that it's ready
     // to be used or closed again).
-    return Local<T>::New(result);
+    return result;
 }
 
 }

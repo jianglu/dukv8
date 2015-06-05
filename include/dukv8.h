@@ -40,4 +40,7 @@
 #include "dukv8/debug.h"
 #include "dukv8/heap_statistics.h"
 
+#include "dukv8/accessor_info.h"
+#include "dukv8/accessor_signature.h"
+
 #endif //DUKV8_DUKV8_H

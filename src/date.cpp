@@ -11,13 +11,14 @@ namespace v8 {
 
 RTTI_IMPLEMENT(v8::Date, v8::Object);
 
-Date::Date(DukContextRef ctx, double time) :
-        Object(ctx) {
+Date *Date::Init(DukContextRef ctx, double time) {
+    Object::Init(ctx);
+    return this;
 }
 
 /*static*/ Local<Value> Date::New(double time) {
     DukContextRef ctx = Isolate::GetCurrent()->GetDukContext();
-    return Local<Value>::New(Handle<Date>(new Date(ctx, time)));
+    return Local<Value>::New(Handle<Date>((new Date)->Init(ctx, time)));
 }
 
 }

@@ -6,7 +6,6 @@
 #define DUKV8_GCOBJECT_H
 
 #include "base.h"
-#include "gcobject_pool.h"
 #include "global_stash.h"
 
 namespace v8 {
@@ -19,15 +18,21 @@ public:
     GCObject();
     virtual ~GCObject();
 
-    void AddToObjectPool(GCObjectPool *pool) const;
+    GCObject *Init();
+    virtual void Deinit();
 
-    void AddToGlobalStash(i::GlobalStash *stash) const;
+    void Retain();
 
-    void RemoveFromGlobalStash(i::GlobalStash *stash) const;
+    void Release();
+
+    int GetRefCount() {
+        return gcobject_ref_count_;
+    }
 
 private:
     void *gcobject_heap_ptr_;
     int gcobject_stash_index_;
+    int gcobject_ref_count_;
 };
 
 }

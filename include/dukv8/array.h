@@ -33,10 +33,11 @@ public:
 
     static Array *Cast(Value *obj);
 
-    V8EXPORT Array(DukContextRef ctx, int length = 0);
-
 private:
     V8EXPORT static void CheckCast(Value *obj);
+
+protected:
+    Array *Init(DukContextRef duk_ctx, int length);
 };
 
 }

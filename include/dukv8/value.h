@@ -166,8 +166,9 @@ public:
     static Handle<Value> FromStack(DukContextRef ctx, int index);
 
 protected:
-    Value(duk_context *duk_ctx) :
-            duk_ctx_(duk_ctx) { }
+    Value *Init(DukContextRef duk_ctx);
+
+    virtual void Deinit();
 
     virtual ~Value() { };
 

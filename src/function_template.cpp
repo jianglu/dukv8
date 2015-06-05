@@ -7,6 +7,7 @@
 #include "dukv8/signature.h"
 #include "dukv8/local.h"
 #include "dukv8/isolate.h"
+#include "dukv8/integer.h"
 #include "dukv8/object_template.h"
 
 namespace v8 {
@@ -38,7 +39,7 @@ Local<FunctionTemplate> FunctionTemplate::New(InvocationCallback callback,
 Local<Function> FunctionTemplate::GetFunction() {
     if (function_.IsEmpty()) {
         DukContextRef ctx = Isolate::GetCurrent()->GetDukContext();
-        function_ = Handle<Function>(new Function(ctx, NULL));
+        function_ = Handle<Function>((new Function)->Init(ctx, NULL));
         Template::ApplyToObject(function_);
         function_->function_template_ = Handle<FunctionTemplate>(this);
         function_->SetName(class_name_);

@@ -29,7 +29,7 @@ Local<Object> ObjectTemplate::NewInstance() {
     DukContextRef ctx = Isolate::GetCurrent()->GetDukContext();
     DUK_STACK_SCOPE(ctx);
     duk_push_object(ctx);
-    Handle<Object> object(new Object(ctx, duk_get_heapptr(ctx, -1)));
+    Handle<Object> object(Object::Create(ctx, duk_get_heapptr(ctx, -1)));
     ObjectTemplate::ApplyToObject(object);
     // internal::Helper *helper = object->GetHelper();
     // helper->m_object_template = Handle<ObjectTemplate>(this);

@@ -6,10 +6,11 @@
 #define DUKV8_STACKTRACE_H
 
 #include "base.h"
+#include "gcobject.h"
 
 namespace v8 {
 
-class V8EXPORT StackTrace {
+class V8EXPORT StackTrace : public i::GCObject {
 public:
     /**
      * Flags that determine what information is placed captured for each

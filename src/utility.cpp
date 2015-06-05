@@ -76,7 +76,10 @@ bool V8::Initialize() {
 
 bool V8::Dispose() {
     Isolate *isolate = Isolate::Current();
-    ASSERT(isolate != NULL && isolate->IsDefaultIsolate());
+    if (isolate != NULL && isolate->IsDefaultIsolate()) {
+        fprintf(stderr, "Use v8::Isolate::Dispose() for a non-default isolate.\n");
+        return false;
+    }
     V8::TearDown();
     return true;
 }
@@ -102,8 +105,10 @@ internal::Object *V8::GlobalizeReference(internal::Object *handle) {
     i::GCObject *gcobject = RTTI_DynamicCast(
             i::GCObject, reinterpret_cast<i::GCObject *>(handle));
     if (gcobject) {
-        i::GlobalStash stash("__persistent");
-        gcobject->AddToGlobalStash(&stash);
+        // i::GlobalStash stash("__persistent");
+        // gcobject->AddToGlobalStash(&stash);
+        // 增加引用计数
+        gcobject->Retain();
     }
 
     return handle;
@@ -113,8 +118,8 @@ void V8::DisposeGlobal(internal::Object *global_handle) {
     i::GCObject *gcobject = RTTI_DynamicCast(
             i::GCObject, reinterpret_cast<i::GCObject *>(global_handle));
     if (gcobject) {
-        i::GlobalStash stash("__persistent");
-        gcobject->RemoveFromGlobalStash(&stash);
+        // i::GlobalStash stash("__persistent");
+        // gcobject->RemoveFromGlobalStash(&stash);
     }
 }
 

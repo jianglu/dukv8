@@ -8,6 +8,7 @@
 #include "dukv8/duk_stack_scope.h"
 #include "dukv8/local.h"
 #include "dukv8/boolean.h"
+#include "dukv8/integer.h"
 #include "dukv8/string.h"
 #include "dukv8/object.h"
 #include "dukv8/number.h"
@@ -23,6 +24,16 @@ void DukObjectRelease(int index) {
 }
 
 RTTI_IMPLEMENT(v8::Value, v8::Data);
+
+Value *Value::Init(DukContextRef duk_ctx) {
+    Data::Init();
+    duk_ctx_ = duk_ctx;
+    return this;
+}
+
+void Value::Deinit() {
+    Data::Deinit();
+}
 
 /**
  * Returns true if this value is the undefined value.  See ECMA-262
@@ -198,15 +209,14 @@ Local<Boolean> Value::ToBoolean() const {
     DUK_STACK_SCOPE(duk_ctx_);
     Push();
     bool value = static_cast<bool>(duk_to_boolean(duk_ctx_, -1));
-    return Local<Boolean>(new Boolean(duk_ctx_, value));
+    return Local<Boolean>(Boolean::Create(duk_ctx_, value));
 }
 
 Local<Number> Value::ToNumber() const {
     DUK_STACK_SCOPE(duk_ctx_);
     Push();
     double value = static_cast<bool>(duk_to_number(duk_ctx_, -1));
-    return Local<Number>::New(Handle<Number>(
-            new Number(duk_ctx_, value)));
+    return Local<Number>::New(Handle<Number>(Number::Create(duk_ctx_, value)));
 }
 
 Local<String> Value::ToString() const {
@@ -215,7 +225,7 @@ Local<String> Value::ToString() const {
     duk_size_t len;
     const char *data = duk_get_lstring(duk_ctx_, -1, &len);
     return Local<String>::New(Handle<String>(
-            new String(duk_ctx_, data, len)));
+            (new String)->Init(duk_ctx_, data, len)));
 }
 
 Local<String> Value::ToDetailString() const {
@@ -227,7 +237,7 @@ Local<Object> Value::ToObject() const {
     Push();
     void *heap_ptr = duk_get_heapptr(duk_ctx_, -1);
     return Local<Object>::New(Handle<Object>(
-            new Object(duk_ctx_, heap_ptr)));
+            Object::Create(duk_ctx_, heap_ptr)));
 }
 
 Local<Integer> Value::ToInteger() const {
@@ -312,24 +322,24 @@ Handle<Value> Value::FromStack(DukContextRef ctx, int index) {
     if (duk_check_type(ctx, index, DUK_TYPE_BOOLEAN)) {
         bool value = static_cast<bool>(duk_get_boolean(ctx, index));
         return Local<Value>::New(Handle<Value>(
-                new Boolean(ctx, value)));
+                Boolean::Create(ctx, value)));
     }
 
     if (duk_check_type(ctx, index, DUK_TYPE_NUMBER)) {
         double value = duk_get_number(ctx, index);
         return Local<Value>::New(Handle<Value>(
-                new Number(ctx, value)));
+                Number::Create(ctx, value)));
     }
 
     if (duk_check_type(ctx, index, DUK_TYPE_STRING)) {
         return Local<Value>::New(Handle<Value>(
-                new String(ctx, duk_get_heapptr(ctx, index))));
+                (new String)->Init(ctx, duk_get_heapptr(ctx, index))));
     }
 
     void *heap_ptr = duk_get_heapptr(ctx, index);
     if (heap_ptr) {
         return Local<Value>::New(Handle<Value>(
-                new Object(ctx, duk_get_heapptr(ctx, index))));
+                Object::Create(ctx, duk_get_heapptr(ctx, index))));
     }
 
     assert(true);

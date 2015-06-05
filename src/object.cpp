@@ -14,22 +14,22 @@ namespace v8 {
 
 RTTI_IMPLEMENT(v8::Object, v8::Value);
 
-Object::Object(duk_context *duk_ctx) :
-        Value(duk_ctx), HeapObject() {
-//    printf("%s\n", __PRETTY_FUNCTION__);
+Object *Object::Init(DukContextRef duk_ctx) {
+    Value::Init(duk_ctx);
+    return this;
 }
 
-Object::Object(duk_context *duk_ctx, void *heap_ptr) :
-        Value(duk_ctx), HeapObject() {
-//    printf("%s\n", __PRETTY_FUNCTION__);
+Object *Object::Init(DukContextRef duk_ctx, void *heap_ptr) {
+    Value::Init(duk_ctx);
     AttachDuktapeObject(heap_ptr);
+    return this;
 }
 
-Object::~Object() {
+void Object::Deinit() {
     if (duk_obj_heapptr_) {
         DukObjectRelease(duk_obj_index_);
     }
-//    printf("%s\n", __PRETTY_FUNCTION__);
+    Value::Deinit();
 }
 
 void Object::AttachDuktapeObject(void *heap_ptr) {
@@ -127,7 +127,7 @@ Local<Value> Object::GetConstructor() {
 
 Local<Object> Object::New() {
     DukContextRef ctx = Isolate::GetCurrent()->GetDukContext();
-    return Local<Object>::New(Handle<Object>(new Object(ctx)));
+    return Local<Object>::New(Handle<Object>((new Object)->Init(ctx)));
 }
 
 Object *Object::Cast(Value *obj) {

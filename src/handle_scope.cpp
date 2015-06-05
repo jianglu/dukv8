@@ -15,20 +15,28 @@ namespace v8 {
 
 HandleScope *HandleScope::s_current_scope_ = NULL;
 
-HandleScope::HandleScope() :
-        pool_(new i::GCObjectPool()) {
-//    printf("%s\n", __PRETTY_FUNCTION__);
+HandleScope::HandleScope() {
+//    printf("[%p] %s\n", this, __PRETTY_FUNCTION__);
     OpenScope();
 }
 
 HandleScope::~HandleScope() {
     CloseScope();
+
     // 合适的时机清除自动释放池
     Isolate *isolate = Isolate::GetCurrent();
     isolate->GetAutoReleasePool()->Release();
 
-    delete pool_;
-//    printf("%s\n", __PRETTY_FUNCTION__);
+    // delete pool_;
+    for (std::set<i::GCObject *>::iterator it = gcobject_set_.begin();
+         it != gcobject_set_.end(); ++it) {
+        (*it)->Release();
+    }
+//    printf("[%p] %s\n", this, __PRETTY_FUNCTION__);
+}
+
+int HandleScope::NumberOfHandles() {
+    return (int) s_current_scope_->gcobject_set_.size();
 }
 
 void HandleScope::OpenScope() {
@@ -41,6 +49,15 @@ void HandleScope::CloseScope() {
     s_current_scope_ = previous_scope_;
 }
 
+void HandleScope::AddObjectToScope(v8::internal::GCObject *gcobject) {
+    std::set<i::GCObject *> &gcobject_set = s_current_scope_->gcobject_set_;
+    std::set<i::GCObject *>::iterator it = gcobject_set.find(gcobject);
+    if (it == gcobject_set.end()) {
+        gcobject->Retain();
+        gcobject_set.insert(gcobject);
+    }
+}
+
 /**
  * Creates a new handle with the given value.
  */
@@ -49,7 +66,7 @@ internal::Object *HandleScope::CreateHandle(internal::Object *value) {
     i::GCObject *gcobject = RTTI_DynamicCast(
             i::GCObject, reinterpret_cast<i::GCObject *>(value));
     if (gcobject) {
-        gcobject->AddToObjectPool(s_current_scope_->pool_);
+        s_current_scope_->AddObjectToScope(gcobject);
     }
 
     // String *string = RTTI_DynamicCast(String, reinterpret_cast<Data *>(value));

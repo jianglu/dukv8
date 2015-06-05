@@ -44,7 +44,8 @@ Local<Object> Context::Global() {
     duk_push_global_object(ctx);
     void *obj_heap_ptr = duk_get_heapptr(ctx, -1);
     duk_pop(ctx);
-    return Local<Object>::New(Handle<Object>(new Object(ctx, obj_heap_ptr)));
+    return Local<Object>::New(Handle<Object>(
+            (new Object)->Init(ctx, obj_heap_ptr)));
 }
 
 /** Creates a new context.
@@ -107,6 +108,7 @@ Local<Context> Context::GetCurrent() {
     if (s_current_context_) {
         return Local<Context>::New(Handle<Context>(s_current_context_));
     }
+    ASSERT(0);
     return Local<Context>();
 }
 

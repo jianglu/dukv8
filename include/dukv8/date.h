@@ -16,7 +16,8 @@ public:
 
     V8EXPORT static Local<Value> New(double time);
 
-    Date(DukContextRef ctx, double time);
+protected:
+    Date *Init(DukContextRef ctx, double time);
 };
 
 }

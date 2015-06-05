@@ -5,6 +5,8 @@
 #include "dukv8/message.h"
 #include "dukv8/local.h"
 #include "dukv8/value.h"
+#include "dukv8/string.h"
+#include "dukv8/stack_trace.h"
 
 namespace v8 {
 

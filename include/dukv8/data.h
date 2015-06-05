@@ -14,6 +14,15 @@ class Data : public i::GCObject {
 public:
     RTTI_DECLARE();
 
+    Data *Init() {
+        i::GCObject::Init();
+        return this;
+    }
+
+    virtual void Deinit() {
+        i::GCObject::Deinit();
+    }
+
 protected:
     virtual ~Data() { }
 };

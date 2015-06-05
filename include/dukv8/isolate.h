@@ -50,7 +50,7 @@ public:
      * When an isolate is no longer used its resources should be freed
      * by calling Dispose().  Using the delete operator is not allowed.
      */
-    // static Isolate *New();
+    static Isolate *New();
 
     /**
      * Returns the entered isolate for the current thread or NULL in

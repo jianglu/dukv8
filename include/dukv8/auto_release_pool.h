@@ -5,6 +5,7 @@
 #ifndef DUKV8_AUTORELEASEPOOL_H
 #define DUKV8_AUTORELEASEPOOL_H
 
+#include <vector>
 #include "base.h"
 
 namespace v8 {
@@ -16,9 +17,12 @@ public:
         Release();
     }
 
-    void *AutoRelease(void *heap_ptr);
+    void AutoRelease(GCObject *gcobject);
 
     void Release();
+
+private:
+    std::vector<GCObject *> objects_;
 };
 
 }

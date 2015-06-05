@@ -9,6 +9,7 @@
 #include "dukv8/object.h"
 #include "dukv8/function.h"
 #include "dukv8/primitive.h"
+#include "dukv8/integer.h"
 
 namespace v8 {
 

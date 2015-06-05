@@ -24,10 +24,7 @@ public:
     static inline StringObject *Cast(v8::Value *obj);
 
 protected:
-
-    StringObject(DukContextRef duk_ctx, Handle<String> value);
-
-    virtual ~StringObject();
+    StringObject *Init(DukContextRef duk_ctx, Handle<String> value);
 
 private:
     V8EXPORT static void CheckCast(v8::Value *obj);

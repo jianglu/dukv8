@@ -4,6 +4,8 @@
 
 #include "dukv8/accessor_info.h"
 #include "dukv8/local.h"
+#include "dukv8/integer.h"
+#include "dukv8/object.h"
 
 namespace v8 {
 

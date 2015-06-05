@@ -98,13 +98,13 @@ public:
     };
 
     // 16-bit character codes.
-    V8EXPORT int Write(uint16_t* buffer,
+    V8EXPORT int Write(uint16_t *buffer,
                        int start = 0,
                        int length = -1,
                        int options = NO_OPTIONS) const;
 
     // ASCII characters.
-    V8EXPORT int WriteAscii(char* buffer,
+    V8EXPORT int WriteAscii(char *buffer,
                             int start = 0,
                             int length = -1,
                             int options = NO_OPTIONS) const;
@@ -114,6 +114,9 @@ public:
                            int length = -1,
                            int *nchars_ref = NULL,
                            int options = NO_OPTIONS) const;
+
+    V8EXPORT bool IsExternal() const;
+    V8EXPORT bool IsExternalAscii() const;
 
     /**
      * A zero length string.
@@ -253,21 +256,27 @@ public:
      * should the underlying buffer be deallocated or modified except through the
      * destructor of the external string resource.
      */
-    V8EXPORT static Local<String> NewExternal(ExternalStringResource *resource);
-
+    /**
+     * src/node_string.cc
+     * Local<String> ret = String::NewExternal(new ImmutableAsciiSource(
+     */
     V8EXPORT static Local<String> NewExternal(ExternalAsciiStringResource *resource);
 
     INTERNAL virtual void Push() const;
 
 protected:
-    String(duk_context *duk_ctx, const char *data, int length);
-    String(duk_context *duk_ctx, void *heap_ptr);
-    virtual ~String();
+    String *Init(DukContextRef duk_ctx, const char *data, int length);
+    String *Init(DukContextRef duk_ctx, void *heap_ptr);
+    String *Init(DukContextRef duk_ctx, ExternalAsciiStringResource *external_resource);
+    virtual void Deinit();
 
 private:
     V8EXPORT static void CheckCast(v8::Value *obj);
 
     friend class Value;
+
+private:
+    ExternalAsciiStringResource *external_ascii_string_resource_;
 };
 
 String *String::Cast(v8::Value *value) {

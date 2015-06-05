@@ -5,6 +5,7 @@
 #include "dukv8/debug.h"
 #include "dukv8/local.h"
 #include "dukv8/value.h"
+#include "dukv8/integer.h"
 #include "dukv8/object.h"
 #include "dukv8/context.h"
 #include "dukv8/function.h"

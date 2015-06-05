@@ -17,8 +17,7 @@ public:
     RTTI_DECLARE();
 
 protected:
-    Primitive(duk_context *duk_ctx) :
-            Value(duk_ctx) { }
+    Primitive *Init(DukContextRef duk_ctx);
 };
 
 Handle<Primitive> V8EXPORT Undefined();

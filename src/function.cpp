@@ -6,6 +6,7 @@
 #include "dukv8/function.h"
 #include "dukv8/isolate.h"
 #include "dukv8/string.h"
+#include "dukv8/integer.h"
 #include "dukv8/function_template.h"
 #include "dukv8/duk_stack_scope.h"
 #include "dukv8/local.h"
@@ -15,18 +16,14 @@ namespace v8 {
 
 RTTI_IMPLEMENT(v8::Function, v8::Object);
 
-Function::Function(DukContextRef duk_ctx, void *heap_ptr) :
-        Object(duk_ctx) {
+Function *Function::Init(DukContextRef duk_ctx, void *heap_ptr) {
+    Object::Init(duk_ctx);
     DUK_STACK_SCOPE(duk_ctx);
     if (heap_ptr) {
         duk_obj_heapptr_ = heap_ptr;
         duk_obj_index_ = DukObjectRetain(duk_obj_heapptr_);
     }
-//    printf("%s\n", __PRETTY_FUNCTION__);
-}
-
-Function::~Function() {
-//    printf("%s\n", __PRETTY_FUNCTION__);
+    return this;
 }
 
 Function *Function::Cast(Value *value) {
@@ -39,7 +36,7 @@ Function *Function::Cast(Value *value) {
             DukContextRef ctx = value->GetDukContext();
             DUK_STACK_SCOPE(ctx);
             value->Push();
-            return new Function(ctx, duk_get_heapptr(ctx, -1));
+            return (new Function)->Init(ctx, duk_get_heapptr(ctx, -1));
         }
     }
     return NULL;

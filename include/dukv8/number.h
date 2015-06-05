@@ -25,11 +25,16 @@ public:
 
     virtual void Push() const;
 
-    V8EXPORT Number(DukContextRef ctx, double value);
     V8EXPORT static void CheckCast(v8::Value *value);
 
+    static Number *Create(DukContextRef ctx, double value) {
+        return (new Number)->Init(ctx, value);
+    }
 private:
     double value_;
+
+protected:
+    Number *Init(DukContextRef ctx, double value);
 };
 
 }

@@ -20,12 +20,17 @@ public:
 
     virtual void Push() const;
 
-    Boolean(duk_context *duk_ctx, bool value);
-
-    virtual ~Boolean();
+    static Boolean *Create(DukContextRef duk_ctx, bool value) {
+        return (new Boolean)->Init(duk_ctx, value);
+    }
 
 private:
     bool value_;
+
+protected:
+    Boolean *Init(DukContextRef duk_ctx, bool value);
+
+    friend class Primitive;
 };
 
 }

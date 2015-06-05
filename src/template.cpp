@@ -8,6 +8,7 @@
 #include "dukv8/local.h"
 #include "dukv8/data.h"
 #include "dukv8/string.h"
+#include "dukv8/integer.h"
 #include "dukv8/object.h"
 #include "dukv8/object_template.h"
 #include "dukv8/function_template.h"

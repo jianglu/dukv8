@@ -10,14 +10,15 @@ namespace v8 {
 
 RTTI_IMPLEMENT(v8::Array, v8::Object);
 
-Array::Array(DukContextRef ctx, int length) :
-        Object(ctx) {
+Array *Array::Init(DukContextRef duk_ctx, int length) {
+    Object::Init(duk_ctx);
+    return this;
 }
 
 /*static*/
 Local<Array> Array::New(int length) {
     DukContextRef ctx = Isolate::GetCurrent()->GetDukContext();
-    return Local<Array>::New(Handle<Array>(new Array(ctx, length)));
+    return Local<Array>::New(Handle<Array>((new Array)->Init(ctx, length)));
 }
 
 uint32_t Array::Length() const {

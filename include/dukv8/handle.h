@@ -49,14 +49,38 @@ public:
      * 创建一个空句柄
      */
     inline Handle() : val_(NULL) {
-//        printf("%s\n", __PRETTY_FUNCTION__);
     }
 
     /**
      * 创建一个新句柄
      */
     inline explicit Handle(T *val) : val_(val) {
-//        printf("%s\n", __PRETTY_FUNCTION__);
+        val_->Retain();
+    }
+
+    inline Handle(const Handle &other) : val_(other.val_) {
+        if (val_) val_->Retain();
+    }
+
+    /**
+     * 赋值操作
+     */
+    Handle &operator=(T *val) {
+        if (val_ != val) {
+            if (val_) { val_->Release(); }
+            val_ = val;
+            if (val_) { val_->Retain(); }
+        }
+        return *this;
+    }
+
+    Handle &operator=(const Handle &other) {
+        if (val_ != other.val_) {
+            if (val_) { val_->Release(); }
+            val_ = other.val_;
+            if (val_) { val_->Retain(); }
+        }
+        return *this;
     }
 
     /**
@@ -71,10 +95,13 @@ public:
          * Handle<Number>.
          */
         TYPE_CHECK(T, S);
+
+        reinterpret_cast<T *>(*that)->Retain();
     }
 
     inline ~Handle() {
 //        printf("%s\n", __PRETTY_FUNCTION__);
+        if (val_) val_->Release();
     }
 
     /**

@@ -13,11 +13,12 @@ RTTI_IMPLEMENT(v8::StringObject, v8::Object);
 
 Local<Value> StringObject::New(Handle<String> value) {
     DukContextRef ctx = Isolate::GetCurrent()->GetDukContext();
-    return Local<Value>::New(Handle<Value>(new StringObject(ctx, value)));
+    return Local<Value>::New(Handle<Value>(
+            (new StringObject)->Init(ctx, value)));
 }
 
-StringObject::StringObject(DukContextRef duk_ctx, Handle<String> value) :
-        Object(duk_ctx) {
+StringObject *StringObject::Init(DukContextRef duk_ctx, Handle<String> value) {
+    Object::Init(duk_ctx);
     value->Push(); // [string]
     duk_to_object(duk_ctx, -1); // [object]
 
@@ -38,11 +39,7 @@ StringObject::StringObject(DukContextRef duk_ctx, Handle<String> value) :
 
     AttachDuktapeObject(duk_get_heapptr(duk_ctx, -1));
     duk_pop(duk_ctx);
-    printf("%s\n", __PRETTY_FUNCTION__);
-}
-
-StringObject::~StringObject() {
-    printf("%s\n", __PRETTY_FUNCTION__);
+    return this;
 }
 
 }

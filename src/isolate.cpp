@@ -93,9 +93,9 @@ Isolate::~Isolate() {
  * When an isolate is no longer used its resources should be freed
  * by calling Dispose().  Using the delete operator is not allowed.
  */
-//Isolate *Isolate::New() {
-//    return new Isolate();
-//}
+Isolate *Isolate::New() {
+    return new Isolate();
+}
 
 /**
  * Returns the entered isolate for the current thread or NULL in
