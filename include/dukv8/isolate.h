@@ -8,6 +8,7 @@
 #include <duktape.h>
 #include "base.h"
 #include "auto_release_pool.h"
+#include "platform.h"
 
 namespace v8 {
 
@@ -49,7 +50,7 @@ public:
      * When an isolate is no longer used its resources should be freed
      * by calling Dispose().  Using the delete operator is not allowed.
      */
-    static Isolate *New();
+    // static Isolate *New();
 
     /**
      * Returns the entered isolate for the current thread or NULL in
@@ -106,22 +107,53 @@ public:
      */
     inline void *GetData();
 
+    /**
+     * 直接通过 TLS 获得当前线程的 Isolate 实例
+     */
+    static Isolate *Current();
+    static Isolate *UncheckedCurrent();
+
+    static void EnsureDefaultIsolate();
+    static void EnterDefaultIsolate();
+
     inline DukContextRef GetDukContext();
 
     inline i::AutoReleasePool *GetAutoReleasePool();
 
-private:
+    bool Init();
+    void Deinit();
+
+    bool IsInitialized() { return state_ == INITIALIZED; }
+
+    // Destroys the non-default isolates.
+    // Sets default isolate into "has_been_disposed" state rather then destroying,
+    // for legacy API reasons.
+    void TearDown();
+
+    bool IsDefaultIsolate() const { return this == default_isolate_; }
+
     Isolate();
-    Isolate(const Isolate &);
     ~Isolate();
+
+private:
+    Isolate(const Isolate &);
     Isolate &operator=(const Isolate &);
 
 private:
-    static Isolate *s_current_isolate_;
+    enum State {
+        UNINITIALIZED,    // Some components may not have been allocated.
+        INITIALIZED       // All components are fully initialized.
+    };
+
+    State state_;
+
+    static Isolate *default_isolate_;
     Isolate *previous_isolate_;
     void *data_;
-    duk_context *dukctx_;
     i::AutoReleasePool *auto_release_pool_;
+    duk_context *duk_ctx_;
+
+    static i::Thread::LocalStorageKey isolate_key_;
 };
 
 void Isolate::SetData(void *data) {
@@ -133,7 +165,7 @@ void *Isolate::GetData() {
 }
 
 DukContextRef Isolate::GetDukContext() {
-    return dukctx_;
+    return duk_ctx_;
 }
 
 i::AutoReleasePool *Isolate::GetAutoReleasePool() {

@@ -495,7 +495,7 @@ public:
      * Check if V8 is dead and therefore unusable.  This is the case after
      * fatal errors such as out-of-memory situations.
      */
-    static bool IsDead();
+    static bool IsDead() { return has_fatal_error_ || has_been_disposed_; }
 
     /**
      * The following 4 functions are to be used when V8 is built with
@@ -914,6 +914,14 @@ private:
     static void MakeWeak(internal::Object *global_handle,
                          void *data,
                          WeakReferenceCallback callback);
+
+private:
+    static void TearDown();
+
+    static bool is_running_;
+    static bool has_been_set_up_;
+    static bool has_fatal_error_;
+    static bool has_been_disposed_;
 
     template<class T> friend class Persistent;
 };

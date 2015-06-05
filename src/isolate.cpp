@@ -7,18 +7,83 @@
 
 namespace v8 {
 
-Isolate *Isolate::s_current_isolate_ = NULL;
+Isolate *Isolate::default_isolate_ = NULL;
+
+i::Thread::LocalStorageKey Isolate::isolate_key_;
+
+// Returns the isolate inside which the current thread is running.
+Isolate *Isolate::Current() {
+    Isolate *isolate = reinterpret_cast<Isolate *>(i::Thread::GetExistingThreadLocal(isolate_key_));
+    ASSERT(isolate != NULL);
+    return isolate;
+}
+
+Isolate *Isolate::UncheckedCurrent() {
+    return reinterpret_cast<Isolate *>(i::Thread::GetThreadLocal(isolate_key_));
+}
+
+bool Isolate::Init() {
+    ASSERT(state_ != INITIALIZED);
+    ASSERT(Isolate::Current() == this);
+
+    // GlobalHandles
+    // HeapProfiler::SetUp();
+
+    state_ = INITIALIZED;
+    return true;
+}
+
+void Isolate::Deinit() {
+    if (state_ == INITIALIZED) {
+        //HeapProfiler::TearDown();
+
+        // The default isolate is re-initializable due to legacy API.
+        state_ = UNINITIALIZED;
+    }
+}
+
+void Isolate::TearDown() {
+    Deinit();
+    Isolate *saved_isolate = previous_isolate_;
+    if (!IsDefaultIsolate()) {
+        delete this;
+    }
+    i::Thread::SetThreadLocal(isolate_key_, saved_isolate);
+}
+
+void Isolate::EnsureDefaultIsolate() {
+    // !! No Thread Safe !!
+    // ScopedLock lock(process_wide_mutex_);
+
+    if (default_isolate_ == NULL) {
+        isolate_key_ = i::Thread::CreateThreadLocalKey();
+        default_isolate_ = new Isolate();
+    }
+
+    // Can't use SetIsolateThreadLocals(default_isolate_, NULL) here
+    // because a non-null thread data may be already set.
+    if (i::Thread::GetThreadLocal(isolate_key_) == NULL) {
+        i::Thread::SetThreadLocal(isolate_key_, default_isolate_);
+    }
+}
+
+void Isolate::EnterDefaultIsolate() {
+    EnsureDefaultIsolate();
+    ASSERT(default_isolate_ != NULL);
+    default_isolate_->Enter();
+}
 
 Isolate::Isolate() :
+        state_(UNINITIALIZED),
         previous_isolate_(NULL),
         data_(NULL),
         auto_release_pool_(new i::AutoReleasePool) {
-    dukctx_ = duk_create_heap_default();
+    duk_ctx_ = duk_create_heap_default();
 }
 
 Isolate::~Isolate() {
-    duk_destroy_heap(dukctx_);
     delete auto_release_pool_;
+    duk_destroy_heap(duk_ctx_);
 }
 
 /**
@@ -28,16 +93,16 @@ Isolate::~Isolate() {
  * When an isolate is no longer used its resources should be freed
  * by calling Dispose().  Using the delete operator is not allowed.
  */
-Isolate *Isolate::New() {
-    return new Isolate();
-}
+//Isolate *Isolate::New() {
+//    return new Isolate();
+//}
 
 /**
  * Returns the entered isolate for the current thread or NULL in
  * case there is no current isolate.
  */
 Isolate *Isolate::GetCurrent() {
-    return s_current_isolate_;
+    return Isolate::UncheckedCurrent();
 }
 
 /**
@@ -62,8 +127,8 @@ void Isolate::SetAbortOnUncaughtException(abort_on_uncaught_exception_t callback
  * restored when exiting.  Re-entering an isolate is allowed.
  */
 void Isolate::Enter() {
-    previous_isolate_ = s_current_isolate_;
-    s_current_isolate_ = this;
+    previous_isolate_ = Isolate::UncheckedCurrent();
+    i::Thread::SetThreadLocal(isolate_key_, this);
 }
 
 /**
@@ -74,9 +139,7 @@ void Isolate::Enter() {
  * Requires: this == Isolate::GetCurrent().
  */
 void Isolate::Exit() {
-    assert(this == s_current_isolate_);
-    s_current_isolate_ = previous_isolate_;
-    previous_isolate_ = NULL;
+    i::Thread::SetThreadLocal(isolate_key_, previous_isolate_);
 }
 
 /**
@@ -84,7 +147,7 @@ void Isolate::Exit() {
  * thread to be disposable.
  */
 void Isolate::Dispose() {
-    delete this;
+    Isolate::TearDown();
 }
 
 }

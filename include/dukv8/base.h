@@ -6,11 +6,13 @@
 #ifndef DUKV8_BASE_H
 #define DUKV8_BASE_H
 
+#include <cassert>
 #include <duktape.h>
 #include "rtti.h"
 
 namespace v8 {
 
+#define ASSERT(x) assert(x)
 #define TODO() printf("%s:%d TODO: %s\n", __FILE__, __LINE__, __PRETTY_FUNCTION__)
 
 typedef duk_context* DukContextRef;

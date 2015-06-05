@@ -9,6 +9,11 @@
 
 namespace v8 {
 
+bool V8::is_running_ = false;
+bool V8::has_been_set_up_ = false;
+bool V8::has_fatal_error_ = false;
+bool V8::has_been_disposed_ = false;
+
 /**
  * Schedules an exception to be thrown when returning to JavaScript.  When an
  * exception has been scheduled it is illegal to invoke any JavaScript
@@ -47,25 +52,49 @@ const char *V8::GetVersion() {
     return "3.14.5.9";
 }
 
-static void V8Exit() {
-    Isolate::GetCurrent()->Dispose();
-}
-
+/**
+ * 如果当前线程存在 Isolate 对象, 表示已经初始化过了
+ */
 bool V8::Initialize() {
-    Isolate *isolate = Isolate::New();
-    isolate->Enter();
-    atexit(&V8Exit);
-    return true;
+    Isolate *isolate = Isolate::UncheckedCurrent();
+    if (isolate != NULL && isolate->IsInitialized()) {
+        return true;
+    }
+
+    Isolate::EnterDefaultIsolate();
+
+    if (IsDead()) return false;
+
+    isolate = Isolate::Current();
+    if (isolate->IsInitialized()) return true;
+
+    is_running_ = true;
+    has_been_set_up_ = true;
+
+    return isolate->Init();
 }
 
 bool V8::Dispose() {
+    Isolate *isolate = Isolate::Current();
+    ASSERT(isolate != NULL && isolate->IsDefaultIsolate());
+    V8::TearDown();
     return true;
 }
 
-/*static*/
-bool V8::IsDead() {
-    TODO();
-    return false;
+void V8::TearDown() {
+    Isolate *isolate = Isolate::Current();
+    ASSERT(isolate->IsDefaultIsolate());
+
+    if (!has_been_set_up_ || has_been_disposed_) return;
+
+    // The isolate has to be torn down before clearing the LOperand
+    // caches so that the optimizing compiler thread (if running)
+    // doesn't see an inconsistent view of the lithium instructions.
+    isolate->TearDown();
+    delete isolate;
+
+    is_running_ = false;
+    has_been_disposed_ = true;
 }
 
 internal::Object *V8::GlobalizeReference(internal::Object *handle) {
