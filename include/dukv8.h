@@ -5,39 +5,39 @@
 #ifndef DUKV8_DUKV8_H
 #define DUKV8_DUKV8_H
 
-#include "dukv8/Isolate.h"
-#include "dukv8/Context.h"
-#include "dukv8/HandleScope.h"
-#include "dukv8/Utility.h"
+#include "dukv8/isolate.h"
+#include "dukv8/context.h"
+#include "dukv8/handle_scope.h"
+#include "dukv8/utility.h"
 
-#include "dukv8/Data.h"
-#include "dukv8/Value.h"
+#include "dukv8/data.h"
+#include "dukv8/value.h"
 
-#include "dukv8/Primitive.h"
-#include "dukv8/Boolean.h"
-#include "dukv8/String.h"
-#include "dukv8/Integer.h"
+#include "dukv8/primitive.h"
+#include "dukv8/boolean.h"
+#include "dukv8/string.h"
+#include "dukv8/integer.h"
 
-#include "dukv8/Object.h"
-#include "dukv8/StringObject.h"
-#include "dukv8/Array.h"
-#include "dukv8/Date.h"
+#include "dukv8/object.h"
+#include "dukv8/string_object.h"
+#include "dukv8/array.h"
+#include "dukv8/date.h"
 
-#include "dukv8/Handle.h"
-#include "dukv8/Local.h"
-#include "dukv8/Persistent.h"
+#include "dukv8/handle.h"
+#include "dukv8/local.h"
+#include "dukv8/persistent.h"
 
-#include "dukv8/Template.h"
-#include "dukv8/ObjectTemplate.h"
-#include "dukv8/FunctionTemplate.h"
+#include "dukv8/template.h"
+#include "dukv8/object_template.h"
+#include "dukv8/function_template.h"
 
-#include "dukv8/Arguments.h"
-#include "dukv8/Signature.h"
+#include "dukv8/arguments.h"
+#include "dukv8/signature.h"
 
-#include "dukv8/Exception.h"
-#include "dukv8/TryCatch.h"
-#include "dukv8/Script.h"
-#include "dukv8/Debug.h"
-#include "dukv8/HeapStatistics.h"
+#include "dukv8/exception.h"
+#include "dukv8/try_catch.h"
+#include "dukv8/script.h"
+#include "dukv8/debug.h"
+#include "dukv8/heap_statistics.h"
 
 #endif //DUKV8_DUKV8_H
